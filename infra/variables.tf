@@ -27,7 +27,6 @@ variable "cloud_run_service_name" {
 }
 
 variable "gcs_bucket_name" {
-  description = "GCS bucket name for persisting the SQLite database (must be globally unique)."
+  description = "GCS bucket name for persisting the SQLite database (must be globally unique). Consider appending your project_id for uniqueness."
   type        = string
-  default     = "llm-webui-data"
 }
