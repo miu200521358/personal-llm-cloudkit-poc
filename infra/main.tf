@@ -7,4 +7,10 @@
 //   - Cloud Run (Open WebUI + Ollama, CPU only, GCS Fuse)
 //   - IAM (Cloud Run Invoker を user_email に付与)
 //
-//   現時点では、Terraform がエラーにならないよう、空の状態を保つ。
+//   現時点では、GCS バケットのみを定義し、Terraform がエラーにならない状態を維持する。
+
+resource "google_storage_bucket" "db_bucket" {
+  name                        = var.gcs_bucket_name
+  location                    = var.region
+  uniform_bucket_level_access = true
+}
