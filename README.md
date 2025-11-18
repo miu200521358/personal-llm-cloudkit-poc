@@ -19,4 +19,4 @@ terraform -chdir=infra init
 terraform -chdir=infra plan -input=false
 ```
 
-GitHub Actions などで実行する場合は、サービスアカウント JSON を Secrets（例: `GCP_SERVICE_ACCOUNT_KEY`）として登録し、Workflow から `TF_VAR_google_credentials_json` 環境変数へ渡してください。これにより、CI 上でも `terraform plan` を実行できます。
+GitHub Actions などで実行する場合は、サービスアカウント JSON を Secrets（例: `TF_VAR_GOOGLE_CREDENTIALS_JSON`）として登録し、Workflow から `TF_VAR_google_credentials_json` 環境変数へ渡してください。これにより、CI 上でも `terraform plan` を実行できます。具体的な Secrets 名や初期設定手順は [`docs/01_first_time_setup.md`](docs/01_first_time_setup.md) を参照してください。
