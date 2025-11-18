@@ -1,36 +1,169 @@
-# 01. First-time setup
+# personal-llm-cloudkit 初回セットアップ手順
 
-Terraform を GitHub Actions から実行する場合は、以下の Secrets をリポジトリに登録してください。ワークフローは `TF_VAR_` から始まる環境変数を Terraform 変数に自動でマッピングします。
+> この手順は **personal-llm-cloudkit（CPU 版）を初めて構築する前に人間が一度だけ行う手動作業** をまとめたものです。
+> ここまで完了すれば、以降は GitHub Actions が自動でインフラを構築します。
 
-| Secret 名（推奨） | 代替 Secret 名 | 説明 | 例 |
+## 0. 前提条件
+- スマートフォンのみでも実施できます（PC があればコピー&ペーストがより簡単になります）。
+- Google アカウント（Gmail）が必要です。未取得の場合は https://accounts.google.com から作成してください。
+- GitHub 無料アカウントで問題ありません。
+- クレジットカード（GCP 利用登録に必須）が手元にあること。
+- 安定したネットワークと、JSON ファイルを安全に保管できる環境。
+
+---
+
+## 1. GitHub アカウントを作成
+1. https://github.com/signup にアクセス。
+2. メールアドレスを入力し、届いた確認コードで認証します。
+3. パスワード・ユーザー名を設定し、アンケートを完了します。
+4. セキュリティ強化のため 2 要素認証（2FA）を **必須で有効化** してください。
+   - GitHub アプリ / Authenticator / SMS など任意の方法で OK。
+
+> **スクリーンショット推奨**: `docs/images/github-signup.png`（Create your account 画面）、`docs/images/github-2fa.png`（2FA 設定画面）。
+
+---
+
+## 2. personal-llm-cloudkit リポジトリをフォーク
+1. https://github.com/miu200521358/personal-llm-cloudkit-poc を開きます。
+2. 画面右上の **Fork** を押し、自分のアカウント配下へフォークします。
+3. フォーク後、自分のリポジトリ（例: `https://github.com/<you>/personal-llm-cloudkit-poc`）へ移動します。
+4. 以降の設定（GitHub Secrets 追加など）は **フォーク先リポジトリ** で行います。
+
+> クローンしたい場合は `git clone https://github.com/<you>/personal-llm-cloudkit-poc.git` を PC で実行しても構いません。
+> **スクリーンショット推奨**: `docs/images/github-fork.png`（Fork ボタン）、`docs/images/github-secrets-entry.png`（Settings → Secrets）。
+
+---
+
+## 3. GCP アカウントを作成
+1. https://cloud.google.com/ にアクセスし **無料トライアルを開始** を押します。
+2. 既存の Google アカウントでログイン（または新規作成）します。
+3. 利用規約に同意し、クレジットカードを登録します。
+4. 無料枠の範囲を超えた課金を避けるため、課金アラートを設定することを推奨します。
+   - 参考: https://cloud.google.com/billing/docs/how-to/budgets 
+
+---
+
+## 4. GCP プロジェクトを作成
+1. https://console.cloud.google.com/ へアクセス。
+2. 画面上部のプロジェクトセレクタから **新しいプロジェクト** をクリック。
+3. プロジェクト名と課金アカウントを指定して作成します。
+4. 「プロジェクト ID」は後で Terraform や GitHub Secrets に入力するため、メモしてください。
+
+> **スクリーンショット推奨**: `docs/images/gcp-create-project.png`（新しいプロジェクト画面）、`docs/images/gcp-project-id.png`（プロジェクト ID 表示）。
+
+---
+
+## 5. Terraform 実行用サービスアカウントを作成
+1. GCP コンソール左上のハンバーガーメニュー → **IAM と管理** → **サービスアカウント** を開きます。
+2. **+ 作成** を押し、以下を入力。
+   - 名前例: `terraform-runner`
+   - ID 例: `terraform-runner`
+   - 説明: 「personal-llm-cloudkit 自動デプロイ用」
+3. 権限付与ステップで以下のいずれかを選択します。
+   - **シンプル案**: `Editor` ロール 1 つ。
+   - **最小権限案**（推奨・4 つのロールを付与）:
+     - `roles/storage.admin`
+     - `roles/run.admin`
+     - `roles/artifactregistry.admin`
+     - `roles/iam.serviceAccountUser`
+4. 「ユーザーへのアクセス権の付与」はスキップして完了します。
+※ Cloud Run や Artifact Registry を扱うため、最小権限案では上記 4 つのロールが必須です。
+
+> **スクリーンショット推奨**: `docs/images/gcp-sa-create.png`（サービスアカウント作成画面）、`docs/images/gcp-sa-roles.png`（ロール付与画面）。
+
+---
+
+## 6. サービスアカウント JSON キーを生成
+1. 作成したサービスアカウントの詳細ページを開き、上部タブの **鍵** を選択。
+2. **鍵を追加** → **新しい鍵を作成** → **JSON** を選んで作成します。
+3. JSON ファイル（例: `terraform-runner-<hash>.json`）が端末にダウンロードされます。
+4. スマホの場合は安全な場所（Files アプリやクラウドストレージ）に保存し、第三者へ共有しないでください。
+5. 後ほど GitHub Secrets `GCP_SA_KEY_JSON` でファイル内容をそのままコピーして貼り付けます。
+
+> **スクリーンショット推奨**: `docs/images/gcp-sa-key.png`（鍵を追加 → JSON）。
+> **注意**: JSON をメール等で送らない。万一漏洩した場合は鍵を削除し再発行してください。
+
+---
+
+## 7. GitHub Secrets を設定
+1. フォークしたリポジトリのトップ → **Settings** → **Secrets and variables** → **Actions** を開きます。
+2. **New repository secret** を押して、以下のキーと値を登録します。
+
+| Secret 名 | 値の例 / 説明 |
+| --- | --- |
+| `GCP_PROJECT_ID` | 例: `personal-llm-123456`（手順 4 で控えた ID） |
+| `GCP_REGION` | 例: `asia-northeast1`（Cloud Run を置きたいリージョン。課金とレイテンシーで選択） |
+| `GCP_SA_KEY_JSON` | 手順 6 で生成した JSON の全文（`{` から `}` までコピーして貼り付け） |
+| `USER_EMAIL` | 自分の Google アカウント（Cloud Run 利用者のメールアドレス） |
+| `SENDGRID_API_KEY` | Issue #6 で取得予定の SendGrid API キー。未取得の場合は後から追加可能なため、現時点ではこのシークレットを作成しなくて問題ありません。 |
+| `MAIL_FROM` | 送信元メールアドレス（SendGrid で認証したもの） |
+
+> **スクリーンショット推奨**: `docs/images/github-secret.png`（New repository secret 画面）。
+> JSON を貼り付ける際は、スマホならメモ帳アプリに一度貼って全選択→コピー→Secrets へ貼ると改行が崩れません。
+
+### Terraform plan ワークフローで参照される Secrets 一覧
+
+Pull Request 上で自動実行される `terraform-plan` ワークフローは、Terraform 変数を環境変数（`TF_VAR_*`）から読み込みます。リポジトリの Secrets に `TF_VAR_*` が未登録の場合でも、次の表の代替名が設定されていれば自動的にフォールバックします。
+
+| Secret 名（推奨） | 代替 Secret 名 | Terraform 変数 / 説明 | 値の例 |
 | --- | --- | --- | --- |
-| `TF_VAR_PROJECT_ID` | `GCP_PROJECT_ID` | GCP プロジェクト ID | `personal-llm-dev` |
-| `TF_VAR_REGION` | `GCP_REGION` | デプロイ先リージョン | `asia-northeast1` |
-| `TF_VAR_USER_EMAIL` | `GCP_USER_EMAIL` | デプロイ通知などで利用するユーザーのメールアドレス | `you@example.com` |
-| `TF_VAR_GCS_BUCKET_NAME` | `GCS_BUCKET_NAME` | 永続化用 Cloud Storage バケット名 | `personal-llm-storage-123` |
-| `GCP_SA_KEY_JSON` | （なし） | Terraform 用サービスアカウント JSON（文字列として貼り付け） | `{ "type": "service_account", ... }` |
+| `TF_VAR_project_id` | `GCP_PROJECT_ID` | `project_id`（Terraform で利用する GCP プロジェクト ID） | `personal-llm-dev` |
+| `TF_VAR_region` | `GCP_REGION` | `region`（Cloud Run / Artifact Registry を配置するリージョン） | `asia-northeast1` |
+| `TF_VAR_user_email` | `GCP_USER_EMAIL` または `USER_EMAIL` | `user_email`（通知等に使用する Google アカウント） | `you@example.com` |
+| `TF_VAR_gcs_bucket_name` | `GCS_BUCKET_NAME` | `gcs_bucket_name`（永続化用 Cloud Storage バケット） | `personal-llm-storage-123` |
+| `TF_VAR_google_credentials_json` | `GCP_SA_KEY_JSON` | `google_credentials_json`（サービスアカウント JSON を文字列としてそのまま渡す） | `{ "type": "service_account", ... }` |
 
-> `.github/workflows/terraform-plan.yml` では、表の左列（推奨）から順に Secret を参照し、未設定の場合は代替列を利用します。どちらか片方を登録すれば自動的に Terraform 変数へマッピングされます。
+> `.github/workflows/terraform-plan.yml` は、上記表の左列（`TF_VAR_*`）から順に参照し、未設定の場合は代替 Secret 名を読み込みます。どちらか片方を登録しておけば自動的に Terraform 変数へマッピングされます。
 
-> `GCP_SA_KEY_JSON` は JSON 全文を 1 つの Secret として保存します。貼り付ける際は改行を含めてそのまま入力してください。ワークフロー側で `TF_VAR_google_credentials_json` として Terraform に渡されます。
+> `GCP_SA_KEY_JSON` には JSON キー全文を 1 件の Secret として貼り付けてください。ワークフローが `TF_VAR_google_credentials_json` に代入し、Terraform から Google Cloud へ認証します。
 
-## サービスアカウントの準備
+---
 
-1. GCP プロジェクトで Terraform 実行専用のサービスアカウントを作成します。
-2. 少なくともリソース作成に必要なロール（例: `roles/storage.admin`）を付与します。
-3. JSON キーをダウンロードし、上記 `GCP_SA_KEY_JSON` Secret に登録します。
+## 8. GitHub Actions で構築を開始
+1. フォーク先リポジトリの **Actions** タブを開きます。
+2. ワークフロー一覧から `deploy-llm-on-gcp` を選択。
+3. 右上の **Run workflow** を押し、デフォルト設定のまま実行します。
+4. 10〜20 分程度で Terraform と Cloud Run の構築が完了し、GitHub Actions のログで成功を確認できます。
+5. 完了後、`USER_EMAIL` で登録したメールに Open WebUI の URL が届きます。Google 認証でログインすれば個人専用環境を利用できます。
+> **スクリーンショット推奨**: `docs/images/github-actions-run.png`（Run workflow ボタン）、`docs/images/github-actions-success.png`（成功ログ）。
 
-## 動作確認
+---
 
-- Pull Request が作成または更新されるたびに、`.github/workflows/terraform-plan.yml` が起動し、`infra/` ディレクトリで `terraform fmt` / `init` / `validate` / `plan` を実行します。
-- すべての Secrets が正しく登録されていれば、Plan の実行結果が PR の Checks に表示されます。
+## 9. 推奨される追加手動作業
+- **GCP 課金アラート**: プロジェクトの予算通知を設定し、想定外の課金を防止。
+- **IAM ロール確認**: `USER_EMAIL` のユーザー自身がプロジェクトのオーナーまたは十分な権限を持っているか確認。
+- **必要 API の有効化**: Cloud Run / Artifact Registry / IAM API などは Terraform でも自動有効化されますが、構築前に有効化しておくと初回デプロイが安定します。
+- **JSON キーの管理**: 端末紛失時に備え、ダウンロード後は安全なストレージに移し、公開クラウドへは置かない。
 
-## トラブルシューティング：`terraform-plan` が失敗する
+---
 
-CI チェックで `terraform plan` が失敗する場合は、次の項目を見直してください。
+## 10. 次にやること
+- ここまで完了していれば、GitHub Actions がフル自動で personal-llm-cloudkit のインフラを構築します。
+- SendGrid など追加サービスのセットアップが必要な場合は、該当 Issue の手順に従ってください。
+- 手順書にスクリーンショットを追加したい場合は `docs/images/` などを作成し、画像ファイルを配置してください（本 Issue ではパス記述のみで可）。
 
-1. 上記 5 つの Secrets がすべて登録されているか。特に `GCP_SA_KEY_JSON` が空のままだと「Attempted to load application default credentials...」のような認証エラーになります。
-2. `GCP_SA_KEY_JSON` に貼り付けた JSON が Terraform 用サービスアカウントのキーと一致しているか（別のサービスアカウントでは認可されません）。
-3. サービスアカウントに、対象プロジェクトの Cloud Storage へアクセスできる権限（例: `roles/storage.admin`）とプロジェクト参照権限（`roles/viewer` など）が与えられているか。
+---
 
-これらを満たしていれば、ワークフローが `TF_VAR_google_credentials_json` として JSON を Terraform に引き渡し、Pull Request 上で `terraform plan` まで到達できます。
+## 11. Terraform plan ワークフローの動作確認
+- Pull Request が作成または更新されるたびに `.github/workflows/terraform-plan.yml` が起動し、`infra/` ディレクトリで `terraform fmt` / `init` / `validate` / `plan` を順に実行します。
+- 上記の Secrets が正しく登録されていれば、`plan` の結果が PR の Checks に表示され、レビュー時に Terraform の差分を確認できます。
+
+## 12. Terraform plan ワークフローのトラブルシューティング
+CI チェックで `terraform plan` が失敗した場合は、次の観点を確認してください。
+
+1. 表に記載した Secrets がすべて登録されているか（特に `GCP_SA_KEY_JSON` が空の場合、`Attempted to load application default credentials...` のような認証エラーになります）。
+2. `GCP_SA_KEY_JSON` に貼り付けた JSON が Terraform 用サービスアカウントのキーと一致しているか（別のサービスアカウントを指定すると権限不足で失敗します）。
+3. サービスアカウントに Cloud Storage など必要な権限（例: `roles/storage.admin`、`roles/run.admin`、`roles/artifactregistry.admin`、`roles/iam.serviceAccountUser`）が付与されているか。
+
+これらを満たしていれば、ワークフローが `TF_VAR_google_credentials_json` として JSON を Terraform に渡し、Pull Request 上で `terraform plan` まで到達できます。
+
+---
+
+## トラブルシューティング（よくある質問）
+- **GitHub Actions が失敗する**: Secrets のスペル、プロジェクト ID、JSON の改行漏れを再確認してください。
+- **GCP プロジェクトが選べない**: 課金アカウントが紐づいているか確認してください。
+- **JSON をスマホで開けない**: メモ帳アプリでファイルを開き、全選択→コピーを行います。iOS では「ファイル」アプリ、Android では「ファイル」アプリまたは Google ドライブで閲覧できます。
+
+---
+
+以上で初回セットアップは完了です。以降の環境構築・更新は GitHub Actions が担当するため、基本的に追加の手動作業は不要です。
