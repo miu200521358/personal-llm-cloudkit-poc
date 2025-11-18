@@ -117,6 +117,8 @@ Pull Request 上で自動実行される `terraform-plan` ワークフローは�
 
 > `GCP_SA_KEY_JSON` には JSON キー全文を 1 件の Secret として貼り付けてください。ワークフローが `TF_VAR_google_credentials_json` に代入し、Terraform から Google Cloud へ認証します。
 
+> Pull Request の `terraform-plan` ワークフローは `pull_request_target` イベントで実行されます。これにより、フォーク先からの PR でも Secrets（`GCP_SA_KEY_JSON` など）を利用できますが、ワークフロー内で PR の HEAD コミットを明示的にチェックアウトしてから Terraform を動かすため、対象ブランチの差分がそのまま plan に反映されます。
+
 ---
 
 ## 8. GitHub Actions で構築を開始

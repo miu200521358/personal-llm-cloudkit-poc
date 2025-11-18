@@ -31,6 +31,8 @@ GitHub Actions などで実行する場合は、サービスアカウント JSON
 
 具体的な Secrets 名や初期設定手順は [`docs/01_first_time_setup.md`](docs/01_first_time_setup.md) を参照してください。
 
+> `terraform-plan` ワークフローは `pull_request_target` イベントで起動し、Secrets に保存した値（`GCP_SA_KEY_JSON` など）を Pull Request でも利用できるようにしています。ワークフロー内で PR の HEAD コミットを明示的にチェックアウトしてから Terraform を実行するため、実際の差分を安全に検証できます。
+
 ### Pull Request チェック (`terraform-plan`) が失敗する場合
 
 GitHub Actions 上で `terraform-plan` ジョブが失敗する主な原因は、Terraform が Google Cloud に対して認証できていないことです。以下を確認してください。
