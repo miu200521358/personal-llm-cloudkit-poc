@@ -30,3 +30,11 @@ variable "gcs_bucket_name" {
   description = "GCS bucket name for persisting the SQLite database (must be globally unique). Consider appending your project_id for uniqueness."
   type        = string
 }
+
+variable "google_credentials_json" {
+  description = "(Optional) Service Account credentials JSON used for Terraform authentication. If omitted, ADC will be used."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+

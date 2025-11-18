@@ -1,0 +1,67 @@
+name: terraform-plan
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+      - '.github/workflows/terraform-plan.yml'
+      - 'README.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    env:
+      TF_VAR_project_id: ${{ secrets.TF_VAR_PROJECT_ID || secrets.GCP_PROJECT_ID || '' }}
+      TF_VAR_region: ${{ secrets.TF_VAR_REGION || secrets.GCP_REGION || '' }}
+      TF_VAR_user_email: ${{ secrets.TF_VAR_USER_EMAIL || secrets.GCP_USER_EMAIL || '' }}
+      TF_VAR_gcs_bucket_name: ${{ secrets.TF_VAR_GCS_BUCKET_NAME || secrets.GCS_BUCKET_NAME || '' }}
+      TF_VAR_google_credentials_json: ${{ secrets.GCP_SA_KEY_JSON }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify required secrets
+        run: |
+          missing=0
+          check_var() {
+            env_name="$1"
+            secret_hint="$2"
+            if [ -z "${!env_name}" ]; then
+              echo "::error::${env_name} is not set. Configure ${secret_hint} in the repository Secrets."
+              missing=1
+            fi
+          }
+
+          check_var TF_VAR_project_id "TF_VAR_PROJECT_ID or GCP_PROJECT_ID"
+          check_var TF_VAR_region "TF_VAR_REGION or GCP_REGION"
+          check_var TF_VAR_user_email "TF_VAR_USER_EMAIL or GCP_USER_EMAIL"
+          check_var TF_VAR_gcs_bucket_name "TF_VAR_GCS_BUCKET_NAME or GCS_BUCKET_NAME"
+          check_var TF_VAR_google_credentials_json "GCP_SA_KEY_JSON"
+
+          if [ "$missing" -eq 1 ]; then
+            exit 1
+          fi
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform fmt
+        run: terraform -chdir=infra fmt -check
+
+      - name: Terraform init
+        run: terraform -chdir=infra init
+
+      - name: Terraform validate
+        run: terraform -chdir=infra validate
+
+      - name: Terraform plan
+        run: terraform -chdir=infra plan -input=false
