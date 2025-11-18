@@ -67,7 +67,7 @@
      - `roles/artifactregistry.admin`
      - `roles/iam.serviceAccountUser`
 4. 「ユーザーへのアクセス権の付与」はスキップして完了します。
-5. Cloud Run や Artifact Registry を扱うため最小権限案では上記 4 つが必須である点を明記してください。
+※ Cloud Run や Artifact Registry を扱うため、最小権限案では上記 4 つのロールが必須です。
 
 > **スクリーンショット推奨**: `docs/images/gcp-sa-create.png`（サービスアカウント作成画面）、`docs/images/gcp-sa-roles.png`（ロール付与画面）。
 
