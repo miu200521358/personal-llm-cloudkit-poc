@@ -8,15 +8,15 @@ Terraform を GitHub Actions から実行する場合は、以下の Secrets を
 | `TF_VAR_REGION` | デプロイ先リージョン | `asia-northeast1` |
 | `TF_VAR_USER_EMAIL` | デプロイ通知などで利用するユーザーのメールアドレス | `you@example.com` |
 | `TF_VAR_GCS_BUCKET_NAME` | 永続化用 Cloud Storage バケット名 | `personal-llm-storage-123` |
-| `TF_VAR_GOOGLE_CREDENTIALS_JSON` | Terraform 用サービスアカウント JSON（文字列として貼り付け） | `{ "type": "service_account", ... }` |
+| `GCP_SA_KEY_JSON` | Terraform 用サービスアカウント JSON（文字列として貼り付け） | `{ "type": "service_account", ... }` |
 
-> `TF_VAR_GOOGLE_CREDENTIALS_JSON` は JSON 全文を 1 つの Secret として保存します。貼り付ける際は改行を含めてそのまま入力してください。
+> `GCP_SA_KEY_JSON` は JSON 全文を 1 つの Secret として保存します。貼り付ける際は改行を含めてそのまま入力してください。ワークフロー側で `TF_VAR_google_credentials_json` として Terraform に渡されます。
 
 ## サービスアカウントの準備
 
 1. GCP プロジェクトで Terraform 実行専用のサービスアカウントを作成します。
 2. 少なくともリソース作成に必要なロール（例: `roles/storage.admin`）を付与します。
-3. JSON キーをダウンロードし、上記 `TF_VAR_GOOGLE_CREDENTIALS_JSON` Secret に登録します。
+3. JSON キーをダウンロードし、上記 `GCP_SA_KEY_JSON` Secret に登録します。
 
 ## 動作確認
 
