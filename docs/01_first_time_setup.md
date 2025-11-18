@@ -95,7 +95,7 @@
 | `GCP_REGION` | 例: `asia-northeast1`（Cloud Run を置きたいリージョン。課金とレイテンシーで選択） |
 | `GCP_SA_KEY_JSON` | 手順 6 で生成した JSON の全文（`{` から `}` までコピーして貼り付け） |
 | `USER_EMAIL` | 自分の Google アカウント（Cloud Run 利用者のメールアドレス） |
-| `SENDGRID_API_KEY` | Issue #6 で取得予定の SendGrid API キー。未取得なら後から追加しても可（現時点では空欄で `N/A` と記録せず、シークレット自体を作らない） |
+| `SENDGRID_API_KEY` | Issue #6 で取得予定の SendGrid API キー。未取得の場合は後から追加可能なため、現時点ではこのシークレットを作成しなくて問題ありません。 |
 | `MAIL_FROM` | 送信元メールアドレス（SendGrid で認証したもの） |
 
 > **スクリーンショット推奨**: `docs/images/github-secret.png`（New repository secret 画面）。
