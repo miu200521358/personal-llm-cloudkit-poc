@@ -8,3 +8,10 @@
 //   - IAM (Cloud Run Invoker を user_email に付与)
 //
 //   現時点では、Terraform がエラーにならないよう、空の状態を保つ。
+
+resource "google_storage_bucket" "db_bucket" {
+  name                        = var.gcs_bucket_name
+  location                    = var.region
+  uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
+}
