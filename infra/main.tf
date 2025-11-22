@@ -5,6 +5,13 @@ resource "google_project_service" "cloud_run" {
   disable_on_destroy = false
 }
 
+resource "google_project_service" "cloud_storage" {
+  project = var.project_id
+  service = "storage.googleapis.com"
+
+  disable_on_destroy = false
+}
+
 resource "google_storage_bucket" "db_bucket" {
   name                        = var.gcs_bucket_name
   location                    = var.region
@@ -88,6 +95,7 @@ resource "google_cloud_run_v2_service" "llm_webui" {
 
   depends_on = [
     google_project_service.cloud_run,
+    google_project_service.cloud_storage,
     google_storage_bucket.db_bucket,
   ]
 }
