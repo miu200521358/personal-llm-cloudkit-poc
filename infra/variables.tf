@@ -26,6 +26,16 @@ variable "cloud_run_service_name" {
   default     = "llm-webui"
 }
 
+variable "openwebui_image" {
+  description = "Container image for the Open WebUI service."
+  type        = string
+}
+
+variable "ollama_image" {
+  description = "Container image for the Ollama service (CPU model)."
+  type        = string
+}
+
 variable "gcs_bucket_name" {
   description = "GCS bucket name for persisting the SQLite database (must be globally unique). Consider appending your project_id for uniqueness."
   type        = string
