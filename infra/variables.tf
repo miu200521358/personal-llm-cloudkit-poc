@@ -29,11 +29,13 @@ variable "cloud_run_service_name" {
 variable "openwebui_image" {
   description = "Container image for the Open WebUI service."
   type        = string
+  default     = "ghcr.io/open-webui/open-webui:main"
 }
 
 variable "ollama_image" {
   description = "Container image for the Ollama service (CPU model)."
   type        = string
+  default     = "ollama/ollama:latest"
 }
 
 variable "gcs_bucket_name" {
