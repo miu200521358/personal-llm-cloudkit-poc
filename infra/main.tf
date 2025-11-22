@@ -30,7 +30,8 @@ resource "google_cloud_run_v2_service" "llm_webui" {
       name = "gcs-db"
 
       gcs {
-        bucket = google_storage_bucket.db_bucket.name
+        bucket    = google_storage_bucket.db_bucket.name
+        read_only = false
       }
     }
 
