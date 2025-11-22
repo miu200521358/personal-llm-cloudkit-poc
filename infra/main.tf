@@ -94,7 +94,7 @@ resource "google_cloud_run_v2_service" "llm_webui" {
 }
 
 resource "google_cloud_run_v2_service_iam_member" "invoker" {
-  name     = google_cloud_run_v2_service.llm_webui.name
+  service  = google_cloud_run_v2_service.llm_webui.name
   location = google_cloud_run_v2_service.llm_webui.location
   role     = "roles/run.invoker"
   member   = "user:${var.user_email}"
