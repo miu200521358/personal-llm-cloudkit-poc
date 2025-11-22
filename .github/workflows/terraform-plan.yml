@@ -31,6 +31,11 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           export_environment_variables: true
 
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
       - name: Terraform fmt check
         run: terraform -chdir=infra fmt -check
 
