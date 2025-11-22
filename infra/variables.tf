@@ -30,3 +30,10 @@ variable "gcs_bucket_name" {
   description = "GCS bucket name for persisting the SQLite database (must be globally unique). Consider appending your project_id for uniqueness."
   type        = string
 }
+
+variable "access_token" {
+  description = "Optional Google Cloud access token for non-interactive or mock runs (leave empty to use Application Default Credentials)."
+  type        = string
+  default     = ""
+  sensitive   = true
+}

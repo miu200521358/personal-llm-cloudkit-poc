@@ -13,4 +13,6 @@ terraform {
 provider "google" {
   project = var.project_id
   region  = var.region
+
+  access_token = trimspace(var.access_token) == "" ? null : var.access_token
 }
