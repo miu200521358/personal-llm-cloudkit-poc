@@ -5,6 +5,12 @@ resource "google_project_service" "cloud_run" {
   disable_on_destroy = false
 }
 
+resource "time_sleep" "wait_for_cloud_run_api" {
+  depends_on = [google_project_service.cloud_run]
+
+  create_duration = "60s"
+}
+
 resource "google_project_service" "cloud_storage" {
   project = var.project_id
   service = "storage.googleapis.com"
@@ -94,7 +100,7 @@ resource "google_cloud_run_v2_service" "llm_webui" {
   }
 
   depends_on = [
-    google_project_service.cloud_run,
+    time_sleep.wait_for_cloud_run_api,
     google_project_service.cloud_storage,
     google_storage_bucket.db_bucket,
   ]
