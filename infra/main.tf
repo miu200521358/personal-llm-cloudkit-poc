@@ -1,9 +1,3 @@
-resource "google_project_service" "cloud_run_api" {
-  project            = var.project_id
-  service            = "run.googleapis.com"
-  disable_on_destroy = false
-}
-
 resource "google_storage_bucket" "db_bucket" {
   name                        = var.gcs_bucket_name
   location                    = var.region
@@ -85,10 +79,7 @@ resource "google_cloud_run_v2_service" "llm_webui" {
     percent = 100
   }
 
-  depends_on = [
-    google_project_service.cloud_run_api,
-    google_storage_bucket.db_bucket,
-  ]
+  depends_on = [google_storage_bucket.db_bucket]
 }
 
 resource "google_cloud_run_v2_service_iam_member" "invoker" {
