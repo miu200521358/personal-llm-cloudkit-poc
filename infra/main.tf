@@ -3,6 +3,10 @@ resource "google_project_service" "cloud_run" {
   service = "run.googleapis.com"
 
   disable_on_destroy = false
+
+  depends_on = [
+    google_project_service.cloud_resource_manager,
+  ]
 }
 
 resource "time_sleep" "wait_for_cloud_run_api" {
@@ -11,11 +15,22 @@ resource "time_sleep" "wait_for_cloud_run_api" {
   create_duration = "60s"
 }
 
+resource "google_project_service" "cloud_resource_manager" {
+  project = var.project_id
+  service = "cloudresourcemanager.googleapis.com"
+
+  disable_on_destroy = false
+}
+
 resource "google_project_service" "cloud_storage" {
   project = var.project_id
   service = "storage.googleapis.com"
 
   disable_on_destroy = false
+
+  depends_on = [
+    google_project_service.cloud_resource_manager,
+  ]
 }
 
 resource "google_storage_bucket" "db_bucket" {
@@ -23,6 +38,10 @@ resource "google_storage_bucket" "db_bucket" {
   location                    = var.region
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
+
+  depends_on = [
+    google_project_service.cloud_storage,
+  ]
 }
 
 resource "google_cloud_run_v2_service" "llm_webui" {
