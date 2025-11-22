@@ -29,19 +29,6 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           export_environment_variables: true
 
-      - name: Setup gcloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Configure gcloud defaults
-        run: |
-          gcloud config set project "$GCP_PROJECT_ID"
-          gcloud config set compute/region "$GCP_REGION"
-        env:
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GCP_REGION: ${{ secrets.GCP_REGION }}
-
       - name: Terraform fmt check
         run: terraform -chdir=infra fmt -check
 
