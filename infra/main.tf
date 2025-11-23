@@ -1,4 +1,6 @@
 resource "google_project_service" "cloud_run" {
+  provider = google.serviceusage
+
   project = var.project_id
   service = "run.googleapis.com"
 
@@ -16,6 +18,8 @@ resource "time_sleep" "wait_for_cloud_run_api" {
 }
 
 resource "google_project_service" "cloud_resource_manager" {
+  provider = google.serviceusage
+
   project = var.project_id
   service = "cloudresourcemanager.googleapis.com"
 
@@ -23,6 +27,8 @@ resource "google_project_service" "cloud_resource_manager" {
 }
 
 resource "google_project_service" "cloud_storage" {
+  provider = google.serviceusage
+
   project = var.project_id
   service = "storage.googleapis.com"
 
