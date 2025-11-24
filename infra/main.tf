@@ -1,15 +1,56 @@
+resource "google_project_service" "service_usage" {
+  provider = google.bootstrap
+
+  project            = var.project_id
+  service            = "serviceusage.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "cloud_resource_manager" {
+  provider = google.bootstrap
+
+  project = var.project_id
+  service = "cloudresourcemanager.googleapis.com"
+
+  disable_on_destroy = false
+
+  depends_on = [
+    google_project_service.service_usage,
+  ]
+}
+
 resource "google_project_service" "cloud_run" {
+  provider = google.bootstrap
+
   project = var.project_id
   service = "run.googleapis.com"
 
   disable_on_destroy = false
+
+  depends_on = [
+    google_project_service.service_usage,
+    google_project_service.cloud_resource_manager,
+  ]
+}
+
+resource "time_sleep" "wait_for_cloud_run_api" {
+  depends_on = [google_project_service.cloud_run]
+
+  create_duration = "60s"
 }
 
 resource "google_project_service" "cloud_storage" {
+  provider = google.bootstrap
+
   project = var.project_id
   service = "storage.googleapis.com"
 
   disable_on_destroy = false
+
+  depends_on = [
+    google_project_service.service_usage,
+    google_project_service.cloud_resource_manager,
+  ]
 }
 
 resource "google_storage_bucket" "db_bucket" {
@@ -17,6 +58,10 @@ resource "google_storage_bucket" "db_bucket" {
   location                    = var.region
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
+
+  depends_on = [
+    google_project_service.cloud_storage,
+  ]
 }
 
 resource "google_cloud_run_v2_service" "llm_webui" {
@@ -94,7 +139,7 @@ resource "google_cloud_run_v2_service" "llm_webui" {
   }
 
   depends_on = [
-    google_project_service.cloud_run,
+    time_sleep.wait_for_cloud_run_api,
     google_project_service.cloud_storage,
     google_storage_bucket.db_bucket,
   ]
