@@ -17,16 +17,12 @@ terraform {
 }
 
 provider "google" {
-  project               = var.project_id
-  region                = var.region
-  user_project_override = true
-  billing_project       = var.project_id
+  project = var.project_id
+  region  = var.region
 }
 
 provider "google" {
-  alias                 = "bootstrap"
-  project               = var.project_id
-  region                = var.region
-  user_project_override = true
-  billing_project       = var.project_id
+  alias   = "bootstrap"
+  project = var.project_id
+  region  = var.region
 }
