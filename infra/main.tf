@@ -28,6 +28,7 @@ resource "google_project_service" "cloud_run" {
   disable_on_destroy = false
 
   depends_on = [
+    google_project_service.service_usage,
     google_project_service.cloud_resource_manager,
   ]
 }
@@ -47,6 +48,7 @@ resource "google_project_service" "cloud_storage" {
   disable_on_destroy = false
 
   depends_on = [
+    google_project_service.service_usage,
     google_project_service.cloud_resource_manager,
   ]
 }
